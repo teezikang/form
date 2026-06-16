@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>GAS 表单邮件通知</title>
+</head>
+<body>
+
+    <h2>联系我们（GAS版）</h2>
+    <form id="contact-form">
+        <label>姓名:</label>
+        <input type="text" name="user_name" required><br><br>
+
+        <label>电子邮箱:</label>
+        <input type="email" name="user_email" required><br><br>
+
+        <label>留言内容:</label>
+        <textarea name="message" required></textarea><br><br>
+
+        <button type="submit">提交表单</button>
+    </form>
+
+    <script>
+        document.getElementById('contact-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // 阻止页面刷新
+
+            // 替换成你在第二步复制的 Google 网页应用程式 URL
+            const gasURL = 'https://script.google.com/macros/s/AKfycbxbyOVQ38P5rh-Fs5l8SBIrjWmHYkjkCUhHDBZ_epbM3EHlk50gzFZc-4te5A903dKBRA/exec'; 
+
+            // 自动打包表单数据
+            const formData = new FormData(this);
+            
+            // 将 FormData 转换为 URL 编码格式（GAS 对这种格式支持最好）
+            const searchParams = new URLSearchParams();
+            for (const pair of formData) {
+                searchParams.append(pair[0], pair[1]);
+            }
+
+            // 发送请求给 Google Script
+            fetch(gasURL, {
+                method: 'POST',
+                body: searchParams,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.result === 'success') {
+                    alert('邮件发送成功！');
+                    document.getElementById('contact-form').reset(); // 清空表单
+                } else {
+                    alert('提交失败: ' + data.error);
+                }
+            })
+            .catch(error => {
+                // 注意：由于跨域(CORS)限制，有时虽然邮件发成功了，JS仍可能进到 catch 里。
+                // 如果发现收到了邮件但弹窗提示错误，可以用下面的方式兼容。
+                alert('请求已发送，请检查邮箱是否收到。');
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
